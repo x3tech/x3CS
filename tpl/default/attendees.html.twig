@@ -1,0 +1,65 @@
+{% extends "base/layout.html.twig" %}
+
+{% block content %}
+  <h2 class=" ui top attached header ">
+    <i class="
+      {% if type == 'absent' %}
+        red
+      {% elseif type == 'present' %}
+        green
+      {% endif %}
+      users icon
+    "></i>
+    <div class="content">
+      Attendees -
+      {% if type == 'all' %}
+          All
+      {% elseif type == 'absent' %}
+          Absent
+      {% elseif type == 'present' %}
+          Checked In
+      {% endif %}
+    </div>
+  </h2>
+
+  <table class="ui sortable bottom attached table segment">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Nickname</th>
+        {% for flag in flags %}
+          <th>{{ flag }}</th>
+        {% endfor %}
+        {% if type != 'absent' %}
+          <th>Checked In</th>
+        {% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for attendee in attendees %}
+        <tr>
+          <td>{{ attendee['name'] }}</td>
+          <td>{{ attendee['nickname'] }}</td>
+          {% for flag in flags %}
+            <td class="{% if flag in attendee['flags'] %}positive{% endif %}">
+              {% if flag in attendee['flags'] %}
+                <i class="checkmark icon"></i>
+              {% endif %}
+            </td>
+          {% endfor %}
+          {% if type != 'absent' %}
+            <td class="{% if attendee['checked_in'] %}positive{% else %}negative{% endif %}">
+              {% if attendee['checked_in'] %}
+                <i class="checkmark icon"></i>
+                {{ attendee['checked_in'] | date("H:i:s") }}
+              {% else %}
+                <i class="close icon"></i>
+              {% endif %}
+            </td>
+          {% endif %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
+

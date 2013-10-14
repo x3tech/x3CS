@@ -1,0 +1,64 @@
+<!doctype HTML>
+<html>
+  <head>
+    <meta charset="utf-8"> 
+    <title>{% block title %}No Title{% endblock %} - {{ site.title }}</title>
+
+    {% block head %}
+      <link rel="stylesheet" href="/static/semantic/css/semantic.min.css" />
+      <style type="text/css">
+        body, html {
+          font-family: sans-serif;
+        }
+
+        .center.box {
+          width: 400px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+      </style>
+    {% endblock %}
+  </head>
+  <body>
+
+  <div class="ui grid">
+    <div class="row">
+      <div class="sixteen wide column">
+        <h1 class="ui header">
+          {{ site.title }} - {{ block('title') }}
+        </h1>
+      </div>
+    </div>
+    <div class="row">
+      <div class="four wide column">
+        <div class="ui vertical menu">
+          <a href="{{ url('checkin') }}" class="item">
+            <i class="checked checkbox icon"></i> Checkin
+          </a>
+          <div class="item">
+            <i class="users icon"></i> Attendees
+            <div class="menu">
+              <a href="{{ url('attendees') }}" class="item">
+                All
+              </a>
+              <a href="{{ url('attendees_present') }}" class="item">
+                  Checked In
+              </a>
+              <a href="{{ url('attendees_absent') }}" class="item">
+                  Absent
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="twelve wide column">
+        {% block content %}No Content Block Specified{% endblock %}
+      </div>
+    </div>
+  </div>
+
+  {% block foot %}
+    <script type="text/javascript" src="/static/semantic/js/semantic.min.js"></script>
+  {% endblock %}
+  </body>
+</html>
