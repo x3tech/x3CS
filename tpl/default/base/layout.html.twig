@@ -52,6 +52,11 @@
           <a href="{{ url('import') }}" class="item">
             <i class="disk download icon"></i> Import
           </a>
+          {% if config.has_reset %}
+            <a href="{{ url('reset') }}" class="item">
+              <i class="warning icon"></i> Reset
+            </a>
+          {% endif %}
         </div>
       </div>
       <div class="twelve wide column">

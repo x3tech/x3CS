@@ -1,0 +1,38 @@
+{% extends "base/layout.html.twig" %}
+
+{% block content %}
+  <div class="center box">
+    <h2 class="ui top attached header">
+      <i class="attention icon"></i>
+      <div class="content">
+        Reset
+      </div>
+      <div class="sub header">Reset the entire database</div>
+    </h2>
+    <div class="ui form attached segment">
+        <form action="{{ url('reset_post') }}" method="post">
+        <div class="field">
+          <input class="ui input" name="password" placeholder="Password" type="password" autofocus>
+        </div>
+        <button type="submit" class="ui massive fluid labeled icon button">
+          <i class="warning icon"></i>
+          Reset Database
+        </button>
+      </form>
+    </div>
+  </div>
+
+  {% if status is defined %}
+    <div style="width:600px; margin-left:auto; margin-right:auto;" class="ui huge icon top attached {% if status %}green{% else %}red{%endif%} message">
+      <i class="{% if status %}check{% else %}exclamation{% endif %} icon"></i>
+      <div class="header">
+        {% if status %}
+          Database Deleted
+        {% else %}
+          Incorrect Password
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}
+

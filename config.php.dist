@@ -13,5 +13,6 @@ define('X3_CHECKIN_DB_PASS', 'password');
 $config = (object)array(
     'importer' => (object)array(
         'flags' => array()
-    )
+    ),
+    'reset_password' => null
 );

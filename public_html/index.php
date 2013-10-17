@@ -42,6 +42,9 @@ $app->register(new Silex\Provider\TwigServiceProvider(), array(
 $app['twig']->addGlobal('site', array(
     'title' => X3_CHECKIN_TITLE
 ));
+$app['twig']->addGlobal('config', array(
+    'has_reset' => (bool)$app['x3cs.config']->reset_password
+));
 
 $app->get('/checkin', function () use ($app) {
     return $app['twig']->render('checkin.html.twig', array());
@@ -119,5 +122,22 @@ $app->post('/import', function (Request $request) use ($app) {
         'status' => true
     ));
 })->bind('import_post');
+
+if($app['x3cs.config']->reset_password) {
+    $app->get('/reset', function (Request $request) use ($app) {
+        return $app['twig']->render('reset.html.twig', array());
+    })->bind('reset');
+
+    $app->post('/reset', function (Request $request) use ($app) {
+        $password = $request->request->get('password');
+        $correctPassword = $password == $app['x3cs.config']->reset_password;
+        if($correctPassword) {
+            $app['x3cs.attendee_manager']->emptyDatabase();
+        }
+        return $app['twig']->render('reset.html.twig', array(
+            'status' => $correctPassword
+        ));
+    })->bind('reset_post');
+}
 
 $app->run();

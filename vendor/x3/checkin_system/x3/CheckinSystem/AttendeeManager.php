@@ -130,4 +130,16 @@ class AttendeeManager
     {
         return (bool)$attendee['checked_in'];
     }
+
+    public function emptyDatabase()
+    {
+        return $this->conn->exec("
+            TRUNCATE attendees_extras;
+            TRUNCATE attendees_flags;
+            TRUNCATE flags;
+            TRUNCATE extras;
+            TRUNCATE checkins;
+            TRUNCATE attendees;
+        ");
+    }
 }
