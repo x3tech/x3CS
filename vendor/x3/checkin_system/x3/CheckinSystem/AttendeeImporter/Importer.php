@@ -80,7 +80,7 @@ class Importer
                 return null;
             }
             if (count($row) < $this->getAttendeeRowCount()) {
-                return array($row, "Column count not matching " . count($row) . " expected(" . $this->getAttendeeRowCount() . ")");
+                return array($row, "Column count not matching got" . count($row) . ", expected " . $this->getAttendeeRowCount());
             }
             if (in_array($row[Attendee::COL_TICKET], $this->ticketIds)) {
                 return array($row, "Duplicate ticket: ". $row[Attendee::COL_TICKET]);
