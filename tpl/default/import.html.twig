@@ -1,0 +1,59 @@
+{% extends "base/layout.html.twig" %}
+
+{% block content %}
+  <div class="center box">
+    <h2 class="ui top attached header">
+      <i class="download disk icon"></i>
+      <div class="content">
+        Import
+      </div>
+      <div class="sub header">Select the attendees and extras files to upload</div>
+    </h2>
+    <div class="ui form attached segment">
+        <form action="{{ url('import_post') }}" method="post" enctype="multipart/form-data">
+        <div class="field">
+          <label>Attendees CSV</label>
+          <input class="ui input" name="attendees" placeholder="Attendee CSV" type="file">
+        </div>
+        <div class="field">
+          <label>Extras CSV</label>
+          <input class="ui input" name="extras" placeholder="Extras CSV" type="file">
+        </div>
+        <button type="submit" class="ui massive fluid labeled icon button">
+          <i class="arrow right icon"></i>
+          Import
+        </button>
+      </form>
+    </div>
+  </div>
+
+  {% if status is defined %}
+    <div style="width:600px; margin-left:auto; margin-right:auto;" class="ui icon top {% if status %}green{% else %}red attached{%endif%} message">
+      <i class="{% if status %}check{% else %}exclamation{% endif %} icon"></i>
+      {% if status %}
+        <div class="header">
+            Imported
+        </div>
+        Imported {{ result['attendees'] }} attendees and {{ result['extras'] }} extras.
+      {% else %}
+        <div class="header">
+          CSV Validation Error
+        </div>
+        {{ errors|length }} row(s) failed to validate
+      {% endif %}
+    </div>
+    {% if not status %}
+      <table style="width:600px; margin-left:auto; margin-right:auto;" class="ui bottom attached table segment">
+        {% for error in errors %}
+          <tr>
+            <th>Row: {{ error[0]|join(',') }}</th>
+          </tr>
+          <tr>
+            <td>{{ error[1] }}</td>
+          </tr>
+        {% endfor %}
+      </table>
+    {% endif %}
+  {% endif %}
+{% endblock %}
+

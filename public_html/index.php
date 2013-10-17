@@ -1,12 +1,17 @@
 <?php
 date_default_timezone_set("Europe/Amsterdam");
 
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+
 require_once(dirname(dirname(__FILE__)) . "/config.php");
 require_once(ROOT_DIR . "/vendor/autoload.php");
 
 use Symfony\Component\HttpFoundation\Request;
 
 use x3\CheckinSystem\AttendeeManager;
+use x3\CheckinSystem\AttendeeImporter\Importer;
+use x3\CheckinSystem\AttendeeImporter\Exception\ValidationError;
 use x3\CheckinSystem\Exception\AlreadyCheckedIn;
 
 $app = new Silex\Application();
@@ -15,9 +20,13 @@ $app['debug'] = true;
 $conn = new PDO(X3_CHECKIN_DB_DSN, X3_CHECKIN_DB_USER, X3_CHECKIN_DB_PASS);
 $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $app['db.conn'] = $conn;
+$app['x3cs.config'] = $config;
 
 $app['x3cs.attendee_manager'] = $app->share(function( $app) {
     return new AttendeeManager($app['db.conn']);
+});
+$app['x3cs.attendee_importer'] = $app->share(function( $app) {
+    return new Importer($app['db.conn'], $app['x3cs.config']->importer);
 });
 
 $app->register(new Silex\Provider\UrlGeneratorServiceProvider());
@@ -83,5 +92,32 @@ $app->get('/attendees/absent/', function () use ($app) {
         'flags' => $app['x3cs.attendee_manager']->getFlags()
     ));
 })->bind('attendees_absent');
+
+$app->get('/import', function () use ($app) {
+    return $app['twig']->render('import.html.twig', array());
+})->bind('import');
+
+$app->post('/import', function (Request $request) use ($app) {
+    try {
+        $attendeesFile = $request->files->get('attendees');
+        $extrasFile = $request->files->get('extras');
+
+        $result = $app['x3cs.attendee_importer']->import(
+            $attendeesFile->getRealPath(),
+            $extrasFile->getRealPath()
+        );
+    } catch(ValidationError $e) {
+        return $app['twig']->render('import.html.twig', array(
+            'errors' => $e->getErrors(),
+            'error_message' => $e->getMessage(),
+            'status' => false
+        ));
+    }
+
+    return $app['twig']->render('import.html.twig', array(
+        'result' => $result,
+        'status' => true
+    ));
+})->bind('import_post');
 
 $app->run();

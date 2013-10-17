@@ -4,17 +4,20 @@ namespace x3\CheckinSystem\AttendeeImporter;
 use Keboola\Csv\CsvFile;
 use x3\Functional\Functional as F;
 
-use Exception\ValidationError;
+use x3\CheckinSystem\AttendeeImporter\Exception\ValidationError;
 
 class Importer
 {
     protected $conn;
+    protected $config;
 
     protected $ticketIds;
 
-    public function __construct(\PDO $conn)
+    public function __construct(\PDO $conn, \stdClass $config)
     {
         $this->conn = $conn;
+        $this->config = $config;
+
         $this->ticketIds = array();
     }
 
@@ -32,13 +35,18 @@ class Importer
 
         $this->conn->beginTransaction();
         try {
-            $this->importAttendees($attendeeFile);
-            $this->importExtras($extrasFile);
+            $attendeesCount = $this->importAttendees($attendeeFile);
+            $extrasCount = $this->importExtras($extrasFile);
         } catch (\PDOException $e) {
             $this->conn->rollback();
             throw $e;
         }
         $this->conn->commit();
+
+        return array(
+            'attendees' => $attendeesCount,
+            'extras' => $extrasCount
+        );
     }
 
     protected function cleanRow(array $row)
@@ -51,6 +59,16 @@ class Importer
         });
     }
 
+    protected function getAttendeeRowCount()
+    {
+        return 3 + count($this->config->flags);
+    }
+
+    protected function hasFlags()
+    {
+        return count($this->config->flags) > 0;
+    }
+
     protected function checkAttendees($filename)
     {
         $csv = new CsvFile($filename);
@@ -60,20 +78,15 @@ class Importer
             if($row[0] == "name") {
                 return null;
             }
-            if (count($row) < 5) {
-                return array($row, "Column count not matching " . count($row) . " expected(5)");
-            }
-            if (!is_numeric($row[Attendee::COL_TICKET])) {
-                return array($row, "Ticket not numeric: " . $row[Attendee::COL_TICKET]);
-            }
-            if (!in_array($row[Attendee::COL_SPONSOR], array("yes", "no"))) {
-                return array($row, "Sponsor not yes/no: " . $row[Attendee::COL_SPONSOR]);
-            }
-            if (!in_array($row[Attendee::COL_SUITER], array("yes", "no"))) {
-                return array($row, "Suiter not yes/no: " . $row[Attendee::COL_SUITER]);
+            if (count($row) < $this->getAttendeeRowCount()) {
+                return array($row, "Column count not matching " . count($row) . " expected(" . $this->getAttendeeRowCount() . ")");
             }
             if (in_array($row[Attendee::COL_TICKET], $this->ticketIds)) {
                 return array($row, "Duplicate ticket: ". $row[Attendee::COL_TICKET]);
+            }
+            $flagResult = $this->checkFlags($row);
+            if($flagResult) {
+                return $flagResult;
             }
 
             $this->ticketIds[] = $row[Attendee::COL_TICKET];
@@ -82,6 +95,24 @@ class Importer
         if (count($invalidRows) > 0) {
             throw new ValidationError('Attendees', $invalidRows);
         }
+    }
+
+    protected function checkFlags($row)
+    {
+        if(!$this->hasFlags()) {
+            return;
+        }
+
+        $columns = array_slice($row, Attendee::COL_FLAG_START);
+        $invalidFlags = array_filter(F::imap($columns, function($column, $index) use ($row) {
+            if(!in_array(strtolower($column), array('yes', 'no'))) {
+                return array($row, sprintf("Value for flag %s isn't yes or no: %s",
+                    $this->config->flags[$index], $column
+                ));
+            }
+        }));
+
+        return count($invalidFlags) > 0 ? $invalidFlags : null;
     }
 
     protected function checkExtras($filename)
@@ -121,19 +152,58 @@ class Importer
     {
         $attendeesQuery = "
             INSERT INTO attendees
-            (name, nickname, ticket, sponsor, suiter)
-            VALUES (?, ?, ?, ?, ?)
+            (name, nickname, ticket)
+            VALUES (?, ?, ?)
         ";
         $csv = new CsvFile($filename);
-        F::iwalk($csv, function($row) use ($attendeesQuery){
+        $count = 0;
+        F::iwalk($csv, function($row) use ($attendeesQuery, &$count){
             if($row[Attendee::COL_NAME] == 'name') {
                 return;
             }
-            $row[Attendee::COL_SPONSOR] = $row[Attendee::COL_SPONSOR] == "yes";
-            $row[Attendee::COL_SUITER] = $row[Attendee::COL_SUITER] == "yes";
 
-            $this->executePrepared($attendeesQuery, $row); 
+            $this->executePrepared(
+                $attendeesQuery,
+                array_slice($row, 0, Attendee::COL_FLAG_START)
+            );
+
+            if(count($this->config->flags)) {
+                $this->importFlags($row[Attendee::COL_TICKET], array_slice(
+                    $row, Attendee::COL_FLAG_START
+                ));
+            }
+            $count++;
         });
+
+        return $count;
+    }
+
+    protected function importFlags($ticketId, $flags)
+    {
+        $callback = function($flagValue, $flagIndex) use ($ticketId) {
+            if(strtolower($flagValue) == "yes") {
+                $flagName = $this->config->flags[$flagIndex];
+                $this->insertFlag($flagName, $ticketId);
+            }
+        };
+
+        array_walk($flags, $callback);
+    }
+
+    protected function insertFlag($flagName, $ticketId)
+    {
+        $flagsQuery = "INSERT IGNORE INTO flags (name) VALUES (?)";
+        $attendeesFlagsQuery = "
+            INSERT INTO attendees_flags
+            (flags_id, attendees_id)
+            VALUES (
+                (SELECT id FROM flags WHERE name LIKE ?),
+                (SELECT id FROM attendees WHERE ticket = ?)
+            )
+        ";
+
+        $this->executePrepared($flagsQuery, array($flagName));
+        $this->executePrepared($attendeesFlagsQuery, array($flagName, $ticketId));
     }
 
     protected function importExtras($filename)
@@ -150,14 +220,19 @@ class Importer
             )
         ";
         $csv = new CsvFile($filename);
+        $count = 0;
 
-        F::iwalk($csv, function($row) use ($extrasQuery, $attendeesExtrasQuery) {
+        F::iwalk($csv, function($row) use ($extrasQuery, $attendeesExtrasQuery, &$count) {
             if($row[Extra::COL_NAME] == 'name') {
                 return;
             }
             $this->executePrepared($extrasQuery, array($row[Extra::COL_NAME]));
             $this->executePrepared($attendeesExtrasQuery, $row);
+
+            $count++;
         });
+
+        return $count;
     }
 }
 

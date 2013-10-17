@@ -9,3 +9,9 @@ define('X3_CHECKIN_THEME', 'DEFAULT');
 define('X3_CHECKIN_DB_DSN', 'mysql:dbname=db;host=localhost;port=3306');
 define('X3_CHECKIN_DB_USER', 'x3cs');
 define('X3_CHECKIN_DB_PASS', 'password');
+
+$config = (object)array(
+    'importer' => (object)array(
+        'flags' => array()
+    )
+);
