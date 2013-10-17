@@ -16,18 +16,18 @@ class AttendeeManager
     protected function getAttendeeStatement($append = "")
     {
         return $this->conn->prepare("
-            SELECT 
+            SELECT
                 a.id AS id,
                 c.created_at AS checked_in,
-                a.name AS name, 
+                a.name AS name,
                 a.nickname AS nickname,
                 e.name AS extra_name,
                 ae.quantity AS extra_quantity,
                 ae.type AS extra_type,
                 f.name AS flag_name
-            FROM 
-                attendees AS a 
-            LEFT JOIN 
+            FROM
+                attendees AS a
+            LEFT JOIN
                 checkins AS c ON c.attendees_id = a.id
             LEFT JOIN
                 attendees_extras AS ae ON ae.attendees_id = a.id
@@ -56,14 +56,14 @@ class AttendeeManager
     public function parseDatabaseAttendee($rows)
     {
         $attendee = array_intersect_key(
-            $rows[0], 
+            $rows[0],
             array_flip(
                 array('id', 'name', 'nickname', 'sponsor', 'suiter', 'checked_in')
             )
         );
         $extras = array_unique(array_filter(array_map(function($row) {
             return array_intersect_key(
-                $row, 
+                $row,
                 array_flip(
                     array('extra_name', 'extra_quantity', 'extra_type')
                 )
@@ -71,7 +71,7 @@ class AttendeeManager
         }, $rows), F::mapKey('extra_name')), SORT_REGULAR);
 
         $flags = array_unique(array_filter(
-            array_map(F::mapKey('flag_name'), $rows) 
+            array_map(F::mapKey('flag_name'), $rows)
         ));
 
         $attendee['extras'] = $extras;
@@ -98,7 +98,7 @@ class AttendeeManager
 
         $this->checkIn($attendee['id']);
         $attendee['checked_in'] = date('Y-m-d H:i:s');
-        
+
         return $attendee;
     }
 
