@@ -26,17 +26,18 @@ class Importer
         if(!file_exists($attendeeFile)) {
             throw new \UnexpectedValueException("$attendeeFile does not exist");
         }
-        if(!file_exists($extrasFile)) {
+        if($extrasFile && !file_exists($extrasFile)) {
             throw new \UnexpectedValueException("$extrasFile does not exist");
         }
 
-        $this->checkAttendees($attendeeFile);
-        $this->checkExtras($extrasFile);
-
         $this->conn->beginTransaction();
         try {
+            $this->checkAttendees($attendeeFile);
             $attendeesCount = $this->importAttendees($attendeeFile);
-            $extrasCount = $this->importExtras($extrasFile);
+            if($extrasFile) {
+                $this->checkExtras($extrasFile);
+                $extrasCount = $this->importExtras($extrasFile);
+            }
         } catch (\PDOException $e) {
             $this->conn->rollback();
             throw $e;
@@ -45,7 +46,7 @@ class Importer
 
         return array(
             'attendees' => $attendeesCount,
-            'extras' => $extrasCount
+            'extras' => $extrasFile ? $extrasCount : 0
         );
     }
 

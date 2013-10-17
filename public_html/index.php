@@ -104,7 +104,7 @@ $app->post('/import', function (Request $request) use ($app) {
 
         $result = $app['x3cs.attendee_importer']->import(
             $attendeesFile->getRealPath(),
-            $extrasFile->getRealPath()
+            $extrasFile ? $extrasFile->getRealPath() : null
         );
     } catch(ValidationError $e) {
         return $app['twig']->render('import.html.twig', array(
