@@ -106,14 +106,14 @@ class Importer
 
         $columns = array_slice($row, Attendee::COL_FLAG_START);
         $invalidFlags = array_filter(F::imap($columns, function($column, $index) use ($row) {
-            if(!in_array(strtolower($column), array('yes', 'no'))) {
+            if(!in_array($column, array('yes', 'no'))) {
                 return array($row, sprintf("Value for flag %s isn't yes or no: %s",
                     $this->config->flags[$index], $column
                 ));
             }
         }));
 
-        return count($invalidFlags) > 0 ? $invalidFlags : null;
+        return count($invalidFlags) > 0 ? reset($invalidFlags) : null;
     }
 
     protected function checkExtras($filename)
