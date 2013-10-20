@@ -158,13 +158,18 @@ class AttendeeManager
 
     public function emptyDatabase()
     {
-        return $this->conn->exec("
-            TRUNCATE attendees_extras;
-            TRUNCATE attendees_flags;
-            TRUNCATE flags;
-            TRUNCATE extras;
-            TRUNCATE checkins;
-            TRUNCATE attendees;
-        ");
+        $tables = array(
+            "attendees_extras",
+            "attendees_flags",
+            "flags",
+            "extras",
+            "checkins",
+            "attendees"
+        );
+        $this->conn->exec("SET foreign_key_checks = 0;");
+        array_walk($tables, function($table) {
+            $this->conn->exec("TRUNCATE " . $table);
+        });
+        $this->conn->exec("SET foreign_key_checks = 1;");
     }
 }
