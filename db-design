@@ -50,8 +50,8 @@ CREATE TABLE IF NOT EXISTS attendees_extras (
   FOREIGN KEY (extras_id) REFERENCES extras (id)
 ) ENGINE=INNODB DEFAULT CHARACTER SET utf8;
 
-ATTENDEES: <name>,<nickname>,<ticket>,<flag>,<flag>,...
-           TEXT   TEXT       INT      TEXT   TEXT
+ATTENDEES: <name>,<nickname>,<ticket>,<flag1>,<flag2>,...
+           TEXT   TEXT       INT      yes/no  yes/no
 
 ATTENDEES_EXTRAS: <name>,<ticket>,<quantity>,<type>
                   TEXT   INT      INT        TEXT
