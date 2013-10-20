@@ -140,4 +140,8 @@ if($app['x3cs.config']->reset_password) {
     })->bind('reset_post');
 }
 
+$app->get('/', function () use ($app) {
+    return $app->redirect($app['url_generator']->generate('checkin'));
+});
+
 $app->run();
