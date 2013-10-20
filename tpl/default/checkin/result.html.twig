@@ -1,54 +1,60 @@
-<div style="width:600px; margin-left:auto; margin-right:auto;" class="ui huge icon top attached {% if status %}green{% else %}red{%endif%} message">
-  <i class="{% if status %}check{% else %}exclamation{% endif %} icon"></i>
-  <div class="header">
-    {% if status %}
-      Checked in!
-    {% else %}
-      Already checked in
-    {% endif %}
+{% extends "checkin/base.html.twig" %}
+
+{% block content %}
+  {{ parent() }}
+
+  <div style="width:600px; margin-left:auto; margin-right:auto;" class="ui huge icon top attached {% if status %}green{% else %}red{%endif%} message">
+    <i class="{% if status %}check{% else %}exclamation{% endif %} icon"></i>
+    <div class="header">
+      {% if status %}
+        Checked in!
+      {% else %}
+        Already checked in
+      {% endif %}
+    </div>
+    Checked in at {{ attendee['checked_in'] | date("H:i") }}
   </div>
-  Checked in at {{ attendee['checked_in'] | date("H:i") }}
-</div>
-<table style="width:600px; margin-left:auto; margin-right:auto;" class="ui four column sortable bottom attached table segment">
-  <tr>
-    <th colspan="2">Name</th>
-    <td colspan="2">{{ attendee['name'] }}</td>
-  </tj>
-  <tr>
-    <th colspan="2">Nickname</th>
-    <td colspan="2">{{ attendee['nickname'] }}</td>
-  </tr>
-  {% for flagrow in flags %}
+  <table style="width:600px; margin-left:auto; margin-right:auto;" class="ui four column sortable bottom attached table segment">
     <tr>
-      {% for flag in flagrow %}
-        <th>{{ flag }}</th>
-        <td class="{% if flag in attendee['flags'] %}positive{% else %}negative{% endif %}">
-          {% if flag in attendee['flags'] %}
-            <i class="checkmark icon"></i>
-          {% else %}
-            <i class="close icon"></i>
-          {% endif %}
-        </td>
-      {% endfor %}
-    </tr>
-  {% endfor %}
-  <tr>
-    <th style="text-align:center" colspan="4">
-      {% if not attendee['extras'] %}No {% endif %}Extras
-    </th>
-  </tr>
-  {% if attendee['extras'] %}
+      <th colspan="2">Name</th>
+      <td colspan="2">{{ attendee['name'] }}</td>
+    </tj>
     <tr>
-      <th>Item</th>
-      <th>Qty</th>
-      <th>Type</th>
+      <th colspan="2">Nickname</th>
+      <td colspan="2">{{ attendee['nickname'] }}</td>
     </tr>
-    {% for extra in attendee['extras'] %}
+    {% for flagrow in flags %}
       <tr>
-        <td>{{ extra['extra_name'] }}</td>
-        <td>{{ extra['extra_quantity'] }}</td>
-        <td colspan="2">{{ extra['extra_type'] }}</td>
+        {% for flag in flagrow %}
+          <th>{{ flag }}</th>
+          <td class="{% if flag in attendee['flags'] %}positive{% else %}negative{% endif %}">
+            {% if flag in attendee['flags'] %}
+              <i class="checkmark icon"></i>
+            {% else %}
+              <i class="close icon"></i>
+            {% endif %}
+          </td>
+        {% endfor %}
       </tr>
     {% endfor %}
-  {% endif %}
-</table>
+    <tr>
+      <th style="text-align:center" colspan="4">
+        {% if not attendee['extras'] %}No {% endif %}Extras
+      </th>
+    </tr>
+    {% if attendee['extras'] %}
+      <tr>
+        <th>Item</th>
+        <th>Qty</th>
+        <th>Type</th>
+      </tr>
+      {% for extra in attendee['extras'] %}
+        <tr>
+          <td>{{ extra['extra_name'] }}</td>
+          <td>{{ extra['extra_quantity'] }}</td>
+          <td colspan="2">{{ extra['extra_type'] }}</td>
+        </tr>
+      {% endfor %}
+    {% endif %}
+  </table>
+{% endblock %}

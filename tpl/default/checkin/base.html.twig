@@ -24,7 +24,7 @@
 
   {% if message is defined %}
     <div style="width:600px; margin-left:auto; margin-right:auto;" class="ui icon red message">
-      <i class="warning icon"></i>
+      <i class="{{ message['icon'] }} icon"></i>
       <div class="content">
         <div class="header">
             {{ message['header']}}
@@ -32,24 +32,6 @@
         <p>{{ message['text'] }}</p>
       </div>
     </div>
-  {% endif %}
-  {% if not_found is defined %}
-    <div style="width:600px; margin-left:auto; margin-right:auto;" class="ui icon red message">
-      <i class="warning icon"></i>
-      <div class="content">
-        <div class="header">
-          Attendee Not Found
-        </div>
-        <p>An attendee could not be found with the ID: {{ not_found['ticket_id'] }} </p>
-      </div>
-    </div>
-  {% endif %}
-
-  {% if attendees is defined %}
-    {% include "checkin/search_result.html.twig" %}
-  {% endif %}
-  {% if status is defined %}
-    {% include "checkin/result.html.twig" %}
   {% endif %}
 {% endblock %}
 
@@ -68,3 +50,4 @@
     })(jQuery);
   </script>
 {% endblock %}
+
