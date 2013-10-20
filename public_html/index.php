@@ -15,7 +15,7 @@ use x3\CheckinSystem\AttendeeImporter\Exception\ValidationError;
 use x3\CheckinSystem\Exception\AlreadyCheckedIn;
 
 $app = new Silex\Application();
-$app['debug'] = true;
+$app['debug'] = X3_CHECKIN_DEBUG;
 
 $conn = new PDO(X3_CHECKIN_DB_DSN, X3_CHECKIN_DB_USER, X3_CHECKIN_DB_PASS);
 $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
