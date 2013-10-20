@@ -13,6 +13,7 @@ use x3\CheckinSystem\AttendeeManager;
 use x3\CheckinSystem\AttendeeImporter\Importer;
 use x3\CheckinSystem\AttendeeImporter\Exception\ValidationError;
 use x3\CheckinSystem\Exception\AlreadyCheckedIn;
+use x3\CheckinSystem\Exception\AttendeeNotFound;
 
 $app = new Silex\Application();
 $app['debug'] = X3_CHECKIN_DEBUG;
@@ -51,25 +52,46 @@ $app->get('/checkin', function () use ($app) {
 })->bind('checkin');
 
 $app->post('/checkin', function (Request $request) use ($app) {
-    $attendeeId = $request->request->get('ticket_id');
-    if(!$attendeeId) {
+    $ticketId = $request->request->get('ticket_id');
+    if(trim($ticketId) == "") {
         return $app['twig']->render('checkin.html.twig', array());
     }
-    try{
-        $attendee = $app['x3cs.attendee_manager']->attemptCheckIn($attendeeId);
-    } catch(AlreadyCheckedIn $exc) {
+
+    if(!is_numeric($ticketId)) {
+        $ticketId = str_replace(array('%'), '', $ticketId);
+        if(strlen($ticketId) < 3) {
+          return $app['twig']->render('checkin.html.twig', array(
+              'message' => array(
+                  'header' => 'Search Too Short',
+                  'text' => 'Search should be a minimum of 3 characters'
+              )
+          ));
+        }
+        $attendees = $app['x3cs.attendee_manager']->search($ticketId);
         return $app['twig']->render('checkin.html.twig', array(
-            'status' => false,
-            'attendee' => $exc->getAttendee(),
+            'attendees' => $attendees,
+            'search' => $ticketId
+        ));
+    } else {
+        try {
+            $attendee = $app['x3cs.attendee_manager']->attemptCheckIn($ticketId);
+        } catch(AttendeeNotFound $exc) {
+            return $app['twig']->render('checkin.html.twig', array(
+                'not_found' => array('ticket_id' => $exc->getTicketId())
+            ));
+        } catch(AlreadyCheckedIn $exc) {
+            return $app['twig']->render('checkin.html.twig', array(
+                'status' => false,
+                'attendee' => $exc->getAttendee(),
+                'flags' => array_chunk($app['x3cs.attendee_manager']->getFlags(), 2)
+            ));
+        }
+        return $app['twig']->render('checkin.html.twig', array(
+            'status' => true,
+            'attendee' => $attendee,
             'flags' => array_chunk($app['x3cs.attendee_manager']->getFlags(), 2)
         ));
     }
-
-    return $app['twig']->render('checkin.html.twig', array(
-        'status' => true,
-        'attendee' => $attendee,
-        'flags' => array_chunk($app['x3cs.attendee_manager']->getFlags(), 2)
-    ));
 })->bind('try_checkin');
 
 $app->get('/attendees/', function () use ($app) {

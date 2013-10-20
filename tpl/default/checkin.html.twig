@@ -9,12 +9,12 @@
       </div>
       <div class="sub header">Scan or enter a barcode to check in</div>
     </h2>
-    <div class="ui form attached segment">
+    <div class="ui form bottom attached segment">
         <form action="{{ url('try_checkin') }}" method="post">
         <div class="field">
-          <input class="ui input" name="ticket_id" placeholder="Ticket ID" type="text" autofocus>
+          <input class="ui input" id="ticket_id" name="ticket_id" placeholder="Ticket ID (Or name/nickname)" type="text" autofocus>
         </div>
-        <button type="submit" class="ui massive fluid labeled icon button">
+        <button id="submit_button" type="submit" class="ui massive fluid labeled icon button">
           <i class="check icon"></i>
           Check in
         </button>
@@ -22,60 +22,49 @@
     </div>
   </div>
 
-  {% if status is defined %}
-    <div style="width:600px; margin-left:auto; margin-right:auto;" class="ui huge icon top attached {% if status %}green{% else %}red{%endif%} message">
-      <i class="{% if status %}check{% else %}exclamation{% endif %} icon"></i>
-      <div class="header">
-        {% if status %}
-          Checked in!
-        {% else %}
-          Already checked in
-        {% endif %}
+  {% if message is defined %}
+    <div style="width:600px; margin-left:auto; margin-right:auto;" class="ui icon red message">
+      <i class="warning icon"></i>
+      <div class="content">
+        <div class="header">
+            {{ message['header']}}
+        </div>
+        <p>{{ message['text'] }}</p>
       </div>
-      Checked in at {{ attendee['checked_in'] | date("H:i") }}
     </div>
-    <table style="width:600px; margin-left:auto; margin-right:auto;" class="ui four column sortable bottom attached table segment">
-      <tr>
-        <th colspan="2">Name</th>
-        <td colspan="2">{{ attendee['name'] }}</td>
-      </td>
-      <tr>
-        <th colspan="2">Nickname</th>
-        <td colspan="2">{{ attendee['nickname'] }}</td>
-      </td>
-      {% for flagrow in flags %}
-        <tr>
-          {% for flag in flagrow %}
-            <th>{{ flag }}</th>
-            <td class="{% if flag in attendee['flags'] %}positive{% else %}negative{% endif %}">
-              {% if flag in attendee['flags'] %}
-                <i class="checkmark icon"></i>
-              {% else %}
-                <i class="close icon"></i>
-              {% endif %}
-            </td>
-          {% endfor %}
-        </tr>
-      {% endfor %}
-      <tr>
-        <th style="text-align:center" colspan="4">
-          {% if not attendee['extras'] %}No {% endif %}Extras
-        </th>
-      </tr>
-      {% if attendee['extras'] %}
-        <tr>
-          <th>Item</th>
-          <th>Qty</th>
-          <th>Type</th>
-        </tr>
-        {% for extra in attendee['extras'] %}
-          <tr>
-            <td>{{ extra['extra_name'] }}</td>
-            <td>{{ extra['extra_quantity'] }}</td>
-            <td colspan="2">{{ extra['extra_type'] }}</td>
-          </tr>
-        {% endfor %}
-      {% endif %}
-    </table>
   {% endif %}
+  {% if not_found is defined %}
+    <div style="width:600px; margin-left:auto; margin-right:auto;" class="ui icon red message">
+      <i class="warning icon"></i>
+      <div class="content">
+        <div class="header">
+          Attendee Not Found
+        </div>
+        <p>An attendee could not be found with the ID: {{ not_found['ticket_id'] }} </p>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if attendees is defined %}
+    {% include "checkin/search_result.html.twig" %}
+  {% endif %}
+  {% if status is defined %}
+    {% include "checkin/result.html.twig" %}
+  {% endif %}
+{% endblock %}
+
+{% block foot %}
+  {{ parent() }}
+  <script type="text/javascript">
+    (function($) {
+      $("#ticket_id").on('keyup change input', function() {
+        var isSearch = isNaN(this.value);
+        var iconClass = isSearch ? "search" : "check";
+        var buttonTitle = isSearch ? "Search" : "Check in";
+
+        $("#submit_button i").attr("class", "icon " + iconClass);
+        $('#submit_button').contents().last().replaceWith(buttonTitle);
+      })
+    })(jQuery);
+  </script>
 {% endblock %}

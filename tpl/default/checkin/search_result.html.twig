@@ -1,0 +1,37 @@
+<div style="width:600px; margin-left:auto; margin-right:auto;" class="ui large top attached message">
+  <div class="header">
+      Search Results
+  </div>
+  Found {{ attendees|length }} attendee(s) for search "{{ search }}"
+</div>
+<table style="width:600px; margin-left:auto; margin-right:auto;" class="ui three column sortable bottom attached table segment">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Nickname</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for attendee in attendees %}
+      <tr>
+        <td colspan="1">{{ attendee['name'] }}</td>
+        <td colspan="1">{{ attendee['nickname'] }}</td>
+        <td colspan="1" {% if attendee['checked_in'] %}class="positive"{% endif %} style="text-align: right">
+          {% if attendee['checked_in'] %}
+            <i class="check icon"></i>
+            Checked in
+          {% else %}
+            <form action="{{ url('try_checkin') }}" method="post">
+              <input id="ticket_id" name="ticket_id" type="hidden" value="{{ attendee['ticket_id'] }}">
+              <button type="submit" class="ui mini labeled icon button">
+                <i class="check icon"></i>
+                Check in
+              </button>
+            </form>
+          {% endif %}
+        </td>
+      </td>
+    {% endfor %}
+  </tbody>
+</table>

@@ -3,6 +3,7 @@ namespace x3\CheckinSystem;
 
 use x3\Functional\Functional as F;
 use x3\CheckinSystem\Exception\AlreadyCheckedIn;
+use x3\CheckinSystem\Exception\AttendeeNotFound;
 
 class AttendeeManager
 {
@@ -18,6 +19,7 @@ class AttendeeManager
         return $this->conn->prepare("
             SELECT
                 a.id AS id,
+                a.ticket AS ticket_id,
                 c.created_at AS checked_in,
                 a.name AS name,
                 a.nickname AS nickname,
@@ -50,6 +52,11 @@ class AttendeeManager
     {
         $stmt = $this->getAttendeeStatement("WHERE a.ticket = ?");
         $stmt->execute(array($ticketId));
+
+        if($stmt->rowCount() == 0) {
+            throw new AttendeeNotFound($ticketId);
+        }
+
         return $this->parseDatabaseAttendee($stmt->fetchAll(\PDO::FETCH_ASSOC));
     }
 
@@ -58,7 +65,7 @@ class AttendeeManager
         $attendee = array_intersect_key(
             $rows[0],
             array_flip(
-                array('id', 'name', 'nickname', 'sponsor', 'suiter', 'checked_in')
+                array('id', 'name', 'nickname', 'sponsor', 'suiter', 'checked_in', 'ticket_id')
             )
         );
         $extras = array_unique(array_filter(array_map(function($row) {
@@ -126,7 +133,25 @@ class AttendeeManager
         }, $rows, true);
     }
 
-    function isCheckedIn($attendee)
+    public function search($searchTerm)
+    {
+        $searchTerm = str_replace(array('%'), '', $searchTerm);
+        $stmt = $this->getAttendeeStatement("
+            WHERE a.name LIKE ? OR a.nickname LIKE ?
+        ");
+
+        $stmt->execute(array("%$searchTerm%", "%$searchTerm%"));
+        if($stmt->rowCount() == 0) {
+            return null;
+        }
+
+        return call_user_func(F::compose(
+            F::curry('array_map', array($this, 'parseDatabaseAttendee')),
+            array($this, 'groupByAttendee')
+        ), $stmt->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
+    protected function isCheckedIn($attendee)
     {
         return (bool)$attendee['checked_in'];
     }
