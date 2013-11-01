@@ -22,19 +22,21 @@
         <tr>
           <td colspan="1">{{ attendee['name'] }}</td>
           <td colspan="1">{{ attendee['nickname'] }}</td>
-          <td colspan="1" {% if attendee['checked_in'] %}class="positive"{% endif %} style="text-align: right">
-            {% if attendee['checked_in'] %}
-              <i class="check icon"></i>
-              Checked in
-            {% else %}
+          <td colspan="1" style="text-align: right">
               <form action="{{ url('try_checkin') }}" method="post">
                 <input id="ticket_id" name="ticket_id" type="hidden" value="{{ attendee['ticket_id'] }}">
-                <button type="submit" class="ui mini labeled icon button">
-                  <i class="check icon"></i>
-                  Check in
-                </button>
+                {% if attendee['checked_in'] %}
+                  <button type="submit" class="ui mini labeled icon button blue">
+                    <i class="info letter icon"></i>
+                    Show Info
+                  </button>
+                {% else %}
+                  <button type="submit" class="ui mini labeled icon button green">
+                    <i class="check icon"></i>
+                    Check in
+                  </button>
+                {% endif %}
               </form>
-            {% endif %}
           </td>
         </td>
       {% endfor %}
