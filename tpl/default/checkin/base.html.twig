@@ -10,7 +10,7 @@
       <div class="sub header">Scan or enter a barcode to check in</div>
     </h2>
     <div class="ui form bottom attached segment">
-        <form id="checkin_form" action="{{ url('try_checkin') }}" method="post">
+      <form id="checkin_form" action="{{ url('try_checkin') }}" method="post">
         <div class="field">
           <input class="ui input" id="ticket_id" name="ticket_id" placeholder="Ticket ID (Or name/nickname)" type="text" autofocus>
         </div>
@@ -27,7 +27,7 @@
       <i class="{{ message['icon'] }} icon"></i>
       <div class="content">
         <div class="header">
-            {{ message['header']}}
+          {{ message['header']}}
         </div>
         <p>{{ message['text'] }}</p>
       </div>

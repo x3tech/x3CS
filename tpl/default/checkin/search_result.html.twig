@@ -7,7 +7,7 @@
 
   <div style="width:600px; margin-left:auto; margin-right:auto;" class="ui large top attached message">
     <div class="header">
-        Search Results
+      Search Results
     </div>
     Found {{ attendees|length }} attendee(s) for search "{{ search }}"
   </div>
@@ -25,20 +25,20 @@
           <td colspan="1">{{ attendee['name'] }}</td>
           <td colspan="1">{{ attendee['nickname'] }}</td>
           <td colspan="1" style="text-align: right">
-              <form action="{{ url('try_checkin') }}" method="post">
-                <input id="ticket_id" name="ticket_id" type="hidden" value="{{ attendee['ticket_id'] }}">
-                {% if attendee['checked_in'] %}
-                  <button type="submit" class="ui mini labeled icon button blue">
-                    <i class="info letter icon"></i>
-                    Show Info
-                  </button>
-                {% else %}
-                  <button type="submit" class="ui mini labeled icon button green">
-                    <i class="check icon"></i>
-                    Check in
-                  </button>
-                {% endif %}
-              </form>
+            <form action="{{ url('try_checkin') }}" method="post">
+              <input id="ticket_id" name="ticket_id" type="hidden" value="{{ attendee['ticket_id'] }}">
+              {% if attendee['checked_in'] %}
+                <button type="submit" class="ui mini labeled icon button blue">
+                  <i class="info letter icon"></i>
+                  Show Info
+                </button>
+              {% else %}
+                <button type="submit" class="ui mini labeled icon button green">
+                  <i class="check icon"></i>
+                  Check in
+                </button>
+              {% endif %}
+            </form>
           </td>
         </td>
       {% endfor %}
