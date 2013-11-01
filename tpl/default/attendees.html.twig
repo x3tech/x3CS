@@ -1,5 +1,16 @@
 {% extends "base/layout.html.twig" %}
 
+{% block title %}
+  Attendees -
+  {% if type == 'all' %}
+    All
+  {% elseif type == 'absent' %}
+    Absent
+  {% elseif type == 'present' %}
+    Checked In
+  {% endif %}
+{% endblock %}
+
 {% block content %}
   <h2 class=" ui top attached header ">
     <i class="
@@ -11,14 +22,7 @@
       users icon
     "></i>
     <div class="content">
-      Attendees -
-      {% if type == 'all' %}
-          All
-      {% elseif type == 'absent' %}
-          Absent
-      {% elseif type == 'present' %}
-          Checked In
-      {% endif %}
+      {{ block('title') }}
     </div>
   </h2>
 
