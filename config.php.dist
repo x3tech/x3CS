@@ -1,6 +1,4 @@
 <?php
-define('ROOT_DIR', dirname(__FILE__));
-
 # Customization
 define('X3_CHECKIN_TITLE', 'x3CS');
 define('X3_CHECKIN_THEME', 'DEFAULT');

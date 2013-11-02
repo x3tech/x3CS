@@ -1,8 +1,7 @@
 <?php
 
-require_once(dirname(dirname(__FILE__)) . "/config.php");
-require_once(dirname(dirname(__FILE__)) . "/vendor/x3/checkin_system/x3/CheckinSystem/System/App.php");
-require_once(dirname(dirname(__FILE__)) . "/vendor/x3/checkin_system/x3/CheckinSystem/System/Controller.php");
+define('ROOT_DIR', dirname(dirname(__FILE__)));
+require_once(ROOT_DIR . "/vendor/x3/checkin_system/x3/CheckinSystem/System/App.php");
 
-setup($app);
+$app->mount('/', new x3\CheckinSystem\CheckinRoutesProvider());
 $app->run();

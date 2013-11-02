@@ -6,7 +6,9 @@ use x3\CheckinSystem\Controllers\AttendeeListController;
 use x3\CheckinSystem\Controllers\ImportController;
 use x3\CheckinSystem\Controllers\CheckinController;
 use x3\CheckinSystem\Controllers\ResetController;
+use x3\CheckinSystem\CheckinRoutesProvider;
 
+require_once(ROOT_DIR . "/config.php");
 require_once(ROOT_DIR . "/vendor/autoload.php");
 
 date_default_timezone_set("Europe/Amsterdam");
