@@ -13,6 +13,5 @@ on an e-ticket.
 
 ## Todo
 
-* Re-organize index.php and possibly split it up in multiple controllers
 * Improve/refactor importer and add excel support
 * Code and system usage documentation
