@@ -1,0 +1,12 @@
+paths:
+  migrations: migrations/
+environments:
+  default_migration_table: migrations
+  primary:
+    adapter: mysql
+    host: %%PHINX_ADDR%%
+    port: %%PHINX_PORT%%
+    name: %%PHINX_DB%%
+    user: %%PHINX_USER%%
+    pass: %%PHINX_PASSWORD%%
+    charset: utf8

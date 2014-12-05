@@ -1,0 +1,5 @@
+ATTENDEES: <name>,<nickname>,<ticket>,<flag1>,<flag2>,...
+           TEXT   TEXT       INT      yes/no  yes/no
+
+ATTENDEES_EXTRAS: <name>,<ticket>,<quantity>,<type>
+                  TEXT   INT      INT        TEXT

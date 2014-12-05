@@ -1,0 +1,9 @@
+#!/bin/bash
+
+export PHINX_DB="${DB_ENV_MYSQL_DATABASE}"
+export PHINX_ADDR="${DB_PORT_3306_TCP_ADDR}"
+export PHINX_PORT="${DB_PORT_3306_TCP_PORT}"
+export PHINX_USER="${DB_ENV_MYSQL_USER}"
+export PHINX_PASSWORD="${DB_ENV_MYSQL_PASSWORD}"
+
+vendor/bin/phinx "$@"
