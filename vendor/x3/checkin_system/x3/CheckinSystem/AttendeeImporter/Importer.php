@@ -2,8 +2,6 @@
 namespace x3\CheckinSystem\AttendeeImporter;
 
 use Keboola\Csv\CsvFile;
-use x3\Functional\Functional as F;
-
 use x3\CheckinSystem\AttendeeImporter\Exception\ValidationError;
 
 class Importer
@@ -52,12 +50,12 @@ class Importer
 
     protected function cleanRow(array $row)
     {
-        return F::imap($row, function($col) {
+        return array_map(function($col) {
             if (in_array(trim(strtolower($col)), array("yes", "no"))) {
                 $col = strtolower($col);
             }
             return trim($col);
-        });
+        }, $row);
     }
 
     protected function getAttendeeRowCount()
@@ -74,24 +72,24 @@ class Importer
     {
         $csv = new CsvFile($filename);
         $csv->next();
-        $invalidRows = array_filter(F::imap($csv, function($row) {
+        $invalidRows = [];
+
+        foreach($csv as $row) {
             $row = $this->cleanRow($row);
             if($row[0] == "name") {
-                return null;
+                continue;
             }
+
             if (count($row) < $this->getAttendeeRowCount()) {
-                return array($row, "Column count not matching got " . count($row) . ", expected " . $this->getAttendeeRowCount());
-            }
-            if (in_array($row[Attendee::COL_TICKET], $this->ticketIds)) {
-                return array($row, "Duplicate ticket: ". $row[Attendee::COL_TICKET]);
-            }
-            $flagResult = $this->checkFlags($row);
-            if($flagResult) {
-                return $flagResult;
+                $invalidRows[] = array($row, "Column count not matching got " . count($row) . ", expected " . $this->getAttendeeRowCount());
+            } elseif (in_array($row[Attendee::COL_TICKET], $this->ticketIds)) {
+                $invalidRows[] = array($row, "Duplicate ticket: ". $row[Attendee::COL_TICKET]);
+            } elseif ($flagResult = $this->checkFlags($row)) {
+                $invalidRows[] = $flagResult;
             }
 
             $this->ticketIds[] = $row[Attendee::COL_TICKET];
-        }));
+        }
 
         if (count($invalidRows) > 0) {
             throw new ValidationError('Attendees', $invalidRows);
@@ -105,13 +103,15 @@ class Importer
         }
 
         $columns = array_slice($row, Attendee::COL_FLAG_START);
-        $invalidFlags = array_filter(F::imap($columns, function($column, $index) use ($row) {
+
+        $invalidFlags = [];
+        foreach ($columns as $index => $column) {
             if(!in_array($column, array('yes', 'no'))) {
-                return array($row, sprintf("Value for flag %s isn't yes or no: %s",
+                $invalidFlags[] = array($row, sprintf("Value for flag %s isn't yes or no: %s",
                     $this->config->flags[$index], $column
                 ));
             }
-        }));
+        }
 
         return count($invalidFlags) > 0 ? reset($invalidFlags) : null;
     }
@@ -119,24 +119,25 @@ class Importer
     protected function checkExtras($filename)
     {
         $csv = new CsvFile($filename);
-        $invalidRows = array_filter(F::imap($csv, function($row) {
+
+        $invalidRows = [];
+        foreach ($csv as $row) {
             $row = $this->cleanRow($row);
+
             if($row[0] == "name") {
-                return null;
+                continue;
             }
+
             if (count($row) < 4) {
-                return array($row, "Column count not matching " . count($row) . " expected(4)");
+                $invalidRows[] = array($row, "Column count not matching " . count($row) . " expected(4)");
+            } else if (!is_numeric($row[Extra::COL_TICKET])) {
+                $invalidRows[] = array($row, "Ticket not numeric: " . $row[Extra::COL_TICKET]);
+            } else if (!is_numeric($row[Extra::COL_QUANTITY])) {
+                $invalidRows[] = array($row, "Ticket not numeric: " . $row[Extra::COL_TICKET]);
+            } else if (!in_array($row[Extra::COL_TICKET], $this->ticketIds)) {
+                $invalidRows[] = array($row, "Ticket not found: ". $row[Extra::COL_TICKET]);
             }
-            if (!is_numeric($row[Extra::COL_TICKET])) {
-                return array($row, "Ticket not numeric: " . $row[Extra::COL_TICKET]);
-            }
-            if (!is_numeric($row[Extra::COL_QUANTITY])) {
-                return array($row, "Ticket not numeric: " . $row[Extra::COL_TICKET]);
-            }
-            if (!in_array($row[Extra::COL_TICKET], $this->ticketIds)) {
-                return array($row, "Ticket not found: ". $row[Extra::COL_TICKET]);
-            }
-        }));
+        }
 
         if (count($invalidRows) > 0) {
             throw new ValidationError('Extras', $invalidRows);
@@ -158,9 +159,9 @@ class Importer
         ";
         $csv = new CsvFile($filename);
         $count = 0;
-        F::iwalk($csv, function($row) use ($attendeesQuery, &$count){
+        foreach ($csv as $row) {
             if($row[Attendee::COL_NAME] == 'name') {
-                return;
+                continue;
             }
 
             $this->executePrepared(
@@ -174,7 +175,7 @@ class Importer
                 ));
             }
             $count++;
-        });
+        }
 
         return $count;
     }
@@ -223,15 +224,16 @@ class Importer
         $csv = new CsvFile($filename);
         $count = 0;
 
-        F::iwalk($csv, function($row) use ($extrasQuery, $attendeesExtrasQuery, &$count) {
+        foreach ($csv as $row) {
             if($row[Extra::COL_NAME] == 'name') {
-                return;
+                continue;
             }
+
             $this->executePrepared($extrasQuery, array($row[Extra::COL_NAME]));
             $this->executePrepared($attendeesExtrasQuery, $row);
 
             $count++;
-        });
+        }
 
         return $count;
     }

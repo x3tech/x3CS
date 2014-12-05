@@ -1,7 +1,6 @@
 <?php
 namespace x3\CheckinSystem;
 
-use x3\Functional\Functional as F;
 use x3\CheckinSystem\Exception\AlreadyCheckedIn;
 use x3\CheckinSystem\Exception\AttendeeNotFound;
 
@@ -68,18 +67,27 @@ class AttendeeManager
                 array('id', 'name', 'nickname', 'sponsor', 'suiter', 'checked_in', 'ticket_id')
             )
         );
-        $extras = array_unique(array_filter(array_map(function($row) {
-            return array_intersect_key(
-                $row,
-                array_flip(
-                    array('extra_name', 'extra_quantity', 'extra_type')
-                )
-            );
-        }, $rows), F::mapKey('extra_name')), SORT_REGULAR);
 
-        $flags = array_unique(array_filter(
-            array_map(F::mapKey('flag_name'), $rows)
-        ));
+        $extras = [];
+        foreach ($rows as $row) {
+            if (!$row['extra_name']) {
+                continue;
+            }
+
+            $extras[] = array_intersect_key(
+                $row,
+                array_flip(array('extra_name', 'extra_quantity', 'extra_type'))
+            );
+        }
+        $extras = array_unique($extras, SORT_REGULAR);
+
+        $flags = [];
+        foreach ($rows as $row) {
+            if ($row['flag_name']) {
+                $flags[] = $row['flag_name'];
+            }
+        }
+        $flags = array_unique($flags);
 
         $attendee['extras'] = $extras;
         $attendee['flags'] = $flags;
@@ -120,17 +128,24 @@ class AttendeeManager
         }
 
         $stmt->execute();
-        return call_user_func(F::compose(
-            F::curry('array_map', array($this, 'parseDatabaseAttendee')),
-            array($this, 'groupByAttendee')
-        ), $stmt->fetchAll(\PDO::FETCH_ASSOC));
+
+        $result = [];
+        foreach ($this->groupByAttendee($stmt->fetchAll(\PDO::FETCH_ASSOC)) as $rows) {
+            $result[] = $this->parseDatabaseAttendee($rows);
+        }
+        return $result;
     }
 
     public function groupByAttendee($rows)
     {
-        return F::arrayMapKeys(function($row) {
-            return array($row['id'], $row);
-        }, $rows, true);
+        $result = [];
+        foreach ($rows as $row) {
+            if (!isset($result[$row['id']])) {
+                $result[$row['id']] = [];
+            }
+            $result[$row['id']][] = $row;
+        }
+        return $result;
     }
 
     public function search($searchTerm)
@@ -145,10 +160,11 @@ class AttendeeManager
             return null;
         }
 
-        return call_user_func(F::compose(
-            F::curry('array_map', array($this, 'parseDatabaseAttendee')),
-            array($this, 'groupByAttendee')
-        ), $stmt->fetchAll(\PDO::FETCH_ASSOC));
+        $result = [];
+        foreach ($this->groupByAttendee($stmt->fetchAll(\PDO::FETCH_ASSOC)) as $rows) {
+            $result[] = $this->parseDatabaseAttendee($rows);
+        }
+        return $result;
     }
 
     protected function isCheckedIn($attendee)
