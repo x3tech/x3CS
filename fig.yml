@@ -1,0 +1,17 @@
+app:
+    links:
+        - db
+    environment:
+        DEBUG: 1
+    volumes:
+        - '.:/var/www'
+    ports:
+        - '8080:80'
+    build: .
+db:
+    environment:
+        MYSQL_ROOT_PASSWORD: x3cs 
+        MYSQL_DATABASE: x3cs
+        MYSQL_USER: x3cs
+        MYSQL_PASSWORD: x3cs
+    image: x3tech/mysql
