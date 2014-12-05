@@ -28,12 +28,12 @@
             <form action="{{ url('checkin_post') }}" method="post">
               <input id="ticket_id" name="ticket_id" type="hidden" value="{{ attendee['ticket_id'] }}">
               {% if attendee['checked_in'] %}
-                <button type="submit" class="ui mini labeled icon button blue">
+                <button type="submit" class="ui mini fluid labeled icon button blue">
                   <i class="info letter icon"></i>
                   Show Info
                 </button>
               {% else %}
-                <button type="submit" class="ui mini labeled icon button green">
+                <button type="submit" class="ui mini fluid labeled icon button green">
                   <i class="check icon"></i>
                   Check in
                 </button>
