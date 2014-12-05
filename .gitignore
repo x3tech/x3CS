@@ -3,5 +3,4 @@ vendor/*
 vendor/x3/*
 !vendor/x3/checkin_system
 composer.lock
-config.php
 *.csv
